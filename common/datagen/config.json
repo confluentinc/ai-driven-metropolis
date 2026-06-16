@@ -1,0 +1,8 @@
+{
+  "bootstrap_servers": "<YOUR_CONFLUENT_BOOTSTRAP_ENDPOINT_ENDINF_WITH_9092>",
+  "kafka_key": "<YOUR_KAFKA_CLUSTER_API_KEY>",
+  "kafka_secret": "<YOUR_KAFKA_CLUSTER_API_SECRET>",
+  "sr_url": "<YOUR_SCHEMA_REGISTRY_ENDPOINT_URL>",
+  "sr_key": "<YOUR_SCHEMA_REGISTRY_API_KEY>",
+  "sr_secret": "<YOUR_SCHEMA_REGISTRY_API_SECRET>"
+}
