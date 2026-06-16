@@ -8,6 +8,20 @@
 
 ![River Robotaxi Logo](./common/images/lab3/lab3-river-robotaxi-logo.png)
 
+This demo showcases an intelligent, real-time fleet management system that autonomously detects demand surges, identifies their causes using AI-powered reasoning, and automatically dispatches vessels to meet increased demand. Built on [Confluent Intelligence](https://www.confluent.io/product/confluent-intelligence/), the system combines stream processing, anomaly detection, retrieval-augmented generation (RAG), and AI agent workflows to create a fully autonomous operations pipeline.
+### What This System Does
+
+The system continuously monitors ride request streams in real time and performs three key automated operations:
+
+1. **Anomaly Detection** – Detects unusual spikes in ride requests across different zones using Flink’s [built-in ML functions](https://docs.confluent.io/cloud/current/ai/builtin-functions/overview.html).  
+2. **Contextual Understanding** – Leverages [vector search](https://docs.confluent.io/cloud/current/ai/external-tables/vector-search.html) and RAG to uncover the reasons behind demand surges (e.g., events, conferences, festivals) by querying a knowledge base.  
+3. **Autonomous Action** – Automatically dispatches docked vessels or repositions available ones to high-demand zones using [Streaming Agents](https://docs.confluent.io/cloud/current/ai/streaming-agents/overview.html) with tool calling.  
+
+All of this runs in real time on **Confluent Cloud for Apache Flink**, with no external orchestration required.
+
+
+![Architecture Diagram](./common/images/lab3/lab3-architecture.png)
+
 ## **Agenda**
 1. [Log into Confluent Cloud](#step-1)
 2. [Create an Environment and Cluster](#step-2)
@@ -45,20 +59,6 @@
 <div align="center" padding=25px>
     <img src="./common/images/billing.png" width=75% height=75%>
 </div>
-
-***
-
-## **Objective**
-
-<br>
-
-Welcome to 
-
-<div align="center" padding=25px>
-    <img src="./common/images/lab3/architecture.png" width=90% height=90%>
-</div>
-
-***
 
 
 ## <a name="step-1"></a>Log into Confluent Cloud
