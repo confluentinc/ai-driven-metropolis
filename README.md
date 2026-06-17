@@ -121,7 +121,7 @@ An environment contains clusters and its deployed components such as Apache Flin
     <img src="./common/images/create-flink-pool-2.png" width=60% height=60%>
 </div>
 
-3. Name you Pool Name and set the capacity units (CFUs) to **10**. Click **Finish**.
+3.  Name your compute pool and set the capacity units (CFUs) to **10**. Click **Finish**.
 
 <div align="center" padding=25px>
     <img src="./common/images/create-flink-pool-3.png" width=60% height=60%>
@@ -336,7 +336,7 @@ Update (common/datagen/config.json) file matching this structure:
 
 ```json
 {
-  "bootstrap_servers": "<YOUR_CONFLUENT_BOOTSTRAP_ENDPOINT_ENDINF_WITH_9092>",
+  "bootstrap_servers": "<YOUR_CONFLUENT_BOOTSTRAP_ENDPOINT_ENDING_WITH_9092>",
   "kafka_key": "<YOUR_KAFKA_CLUSTER_API_KEY>",
   "kafka_secret": "<YOUR_KAFKA_CLUSTER_API_SECRET>",
   "sr_url": "<YOUR_SCHEMA_REGISTRY_ENDPOINT_URL>",
@@ -641,7 +641,7 @@ FROM (
 );
 ```
 
-> NOTE: Leave the query running so that it runs continously.
+> NOTE: Leave the query running so that it runs continuously.
 
 ## <a name="step-9"></a>Execute Real-Time Decisions Using Streaming AI Agents
 
