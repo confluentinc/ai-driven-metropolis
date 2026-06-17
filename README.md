@@ -20,7 +20,7 @@ The system continuously monitors ride request streams in real time and performs 
 All of this runs in real time on **Confluent Cloud for Apache Flink**, with no external orchestration required.
 
 
-![Architecture Diagram](./common/images/lab3/lab3-architecture.png)
+![Architecture Diagram](./common/images/workshop-archietecture.png)
 
 ## **Agenda**
 1. [Log into Confluent Cloud](#step-1)
