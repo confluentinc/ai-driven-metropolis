@@ -23,6 +23,8 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 ![Architecture Diagram](./common/images/workshop-archietecture.png)
 
 ## **Agenda**
+
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
 1. [Log into Confluent Cloud](#step-1)
 2. [Create an Environment and Cluster](#step-2)
 3. [Create a Flink Compute Pool](#step-3)
@@ -32,8 +34,15 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 7. [Detect Anomalies Using Built-In Flink Functions](#step-7)
 8. [Invoke AI Models on Flink for Enrichment and Vector Search](#step-8)
 9. [Execute Real-Time Decisions Using Streaming AI Agents](#step-9)
-10. [Clean Up Resources](#step-10)
-11. [Confluent Resources and Next Steps](#step-11)
+
+
+### Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
+10. [Enable RTCE and Add API Keys](#step-10)
+11. [Download and Install IBM Bob](#step-11)
+12. [Set Up MCP Server in IBM Bob](#step-12)
+13. [Query Data from Topic and Explore Schemas](#step-13)
+14. [Clean Up Resources](#step-14)
+15. [Confluent Resources and Next Steps](#step-15)
 ***
 
 ## **Prerequisites**
@@ -72,6 +81,8 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 2. If you are logging in for the first time, you will see a self-guided wizard that walks you through spinning up a cluster. Please minimize this as you will walk through those steps in this workshop. 
 
 ***
+
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
 
 ## <a name="step-2"></a>Create an Environment and Cluster
 
@@ -755,8 +766,158 @@ SELECT * FROM `completed_actions`;
 
 By chaining these intelligent streaming components together, we’ve built an always-on, real-time, context-aware agentic pipeline that detects ride request demand surges, explains their causes, and takes autonomous action — all within seconds.
 
+---
 
-## <a name="step-10"></a>Clean Up Resources
+# Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
+
+In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on one of the topics created in Part 1, then use **IBM Bob** as an AI assistant to query that live data through an MCP server — without writing any code.
+
+> **What is RTCE?**  
+> The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data source. It automatically indexes messages, understands their schema, and provides an MCP-compatible endpoint so any MCP-aware AI tool can read, filter, and reason over your streaming data in real time.
+
+> **What is IBM Bob?**  
+> IBM Bob is an AI-powered assistant that supports the Model Context Protocol (MCP), allowing it to connect to live data sources and answer natural language questions against them.
+
+---
+
+## <a name="step-10"></a>Enable RTCE and Add API Keys
+
+1. In **Confluent Cloud**, navigate to the environment you created in Part 1.
+2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
+
+<div align="center" padding=25px>
+    <img src="./common/images/rtce-topic.png" width=90% height=90%>
+</div>
+
+3. Select the topic you want to expose — for this exercise use `completed_actions`.
+4. In the topic detail view, click the **Context engine** toggle to enable RTCE. A dialog will appear confirming the enablement details (topic name, environment, cluster, cloud, and region).
+
+<div align="center" padding=25px>
+    <img src="./common/images/rtce-topic-details.png" width=50% height=50%>
+</div>
+
+> **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
+
+5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 12.
+6. The RTCE endpoint URL follows the pattern:
+   ```
+   https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>
+   ```
+7. Create a Global API key
+    1. Open the Administration menu in the upper-right corner and select API keys.
+    2. Click + Add API key.
+    3. For Name, enter a name for the API key.
+    4. Optionally, for Description, enter a description.
+    5. Under Select account, select My account.
+    6. Under Select key scope, select Global.
+    7. Click Create API key.
+    8. Download or copy the API key and secret. After you close this dialog, the secret is no longer available.
+   
+8. Generate the Base64 token
+    ```shell
+    export KEY=<API_KEY>
+    export SECRET=<API_SECRET>
+    export TOKEN=$(echo -n "${KEY}:${SECRET}" | base64)
+    echo $TOKEN
+    ```
+    Save this token for later use.
+---
+
+## <a name="step-11"></a>Download and Install IBM Bob
+
+1. Go to [https://bob.ibm.com](https://bob.ibm.com) and sign in with your IBM ID (or create a free account with your personal email).
+2. Download the **IBM Bob** desktop application for your operating system (macOS, Windows, or Linux).
+3. Run the installer and follow the on-screen instructions to complete the installation.
+4. Launch IBM Bob and sign in with your IBM ID.
+
+---
+
+## <a name="step-12"></a>Set Up MCP Server in IBM Bob
+
+IBM Bob supports MCP servers as external data connections. You will register the RTCE endpoint as an MCP server so Bob can query your Kafka topic in real time.
+
+1. In IBM Bob, open **Settings** on the right panel → **MCP Servers** (or **Integrations** → **MCP**).
+2. Click **Open on Global MCP tab** and paste in the following with the details for your mcp server:
+
+   ```json
+    {
+    "mcpServers": {
+        "confluent-rtce": {
+        "type": "streamable-http",
+        "url": "https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>",
+        "headers": {
+            "Authorization": "Basic <TOKEN>"
+        }
+        }
+    }
+    }
+   ```
+
+3. Click Save and verify that IBM Bob can successfully connect to the RTCE endpoint. Once the connection is established, a new MCP server will appear with a green status indicator, as shown below.
+<div align="center" padding=25px>
+    <img src="./common/images/mcp-server-verification.png" width=50% height=50%>
+</div>
+4. Once the connection shows **Connected**, you are ready to query.
+
+---
+
+## <a name="step-13"></a>Query Data from Topic and Explore Schemas
+
+With the MCP server configured, IBM Bob can answer natural language questions against your live Kafka topic.
+
+### Discover Available Topics
+
+Start by asking Bob what topics are available:
+
+> *"What topics are available?"*
+
+Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and return all online topics — for example `completed_actions` and other topics you have rtce enabled on.
+
+<div align="center" padding=25px>
+    <img src="./common/images/bob-mcp-answer.png" width=75% height=75%>
+</div>
+
+### View Topic Schema
+
+Ask Bob to describe the structure of a topic:
+
+> *"What is the schema of the `completed_actions` topic?"*
+
+Bob will return the field names, data types, and a sample record from the topic — pulled live from RTCE.
+
+### Query Recent Records
+
+Retrieve recent events from the topic:
+
+> *"Show me the last 10 messages from `completed_actions`."*
+
+### Explore Anomalies
+
+If you left the anomaly detection job running from Part 1 , you can enable rtce on `anomalies_enriched` topic and query :
+
+> *"Are there any anomalies in `anomalies_enriched` right now?"*
+
+> *"What is the anomaly reason for the most recent surge?"*
+
+### Cross-Topic Analysis
+
+You can enable rtce on multiple topics and perfome complex queries:
+
+> *"Which zones had the highest request count in the last 5 minutes?"*
+
+> *"What actions were taken by the dispatch agent in `completed_actions`?"*
+
+Bob will use RTCE to fetch, filter, and reason over the live streaming data and return grounded, up-to-date answers.
+
+## Confluent RTCE + IBM Bob — Resources
+
+- [Real-Time Context Engine Overview](https://docs.confluent.io/cloud/current/ai/real-time-context-engine/overview.html#real-time-context-engine) — Official Confluent documentation for RTCE, including setup, API reference, and MCP integration details.
+- [IBM Bob](https://bob.ibm.com/) — IBM's AI assistant with MCP support for querying live data sources.
+
+***
+
+
+## <a name="step-14"></a>Clean Up Resources
 
 Deleting the resources you created during this workshop will prevent you from incurring additional charges. 
 
@@ -778,7 +939,7 @@ Deleting the resources you created during this workshop will prevent you from in
 
 *** 
 
-## <a name="step-11"></a>Confluent Resources and Further Testing
+## <a name="step-15"></a>Confluent Resources and Further Testing
 
 Here are some links to check out if you are interested in further testing:
 - [Confluent Cloud Documentation](https://docs.confluent.io/cloud/current/overview.html)
@@ -789,4 +950,4 @@ Here are some links to check out if you are interested in further testing:
 - [Flink GenAI](https://www.confluent.io/blog/flinkai-realtime-ml-and-genai-confluent-cloud/)
 
 ***
-
+---
