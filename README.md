@@ -34,14 +34,15 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 7. [Detect Anomalies Using Built-In Flink Functions](#step-7)
 8. [Invoke AI Models on Flink for Enrichment and Vector Search](#step-8)
 9. [Execute Real-Time Decisions Using Streaming AI Agents](#step-9)
-10. [Clean Up Resources](#step-10)
-11. [Confluent Resources and Next Steps](#step-11)
+
 
 ### Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
-12. [Enable RTCE and Add API Keys](#step-12)
-13. [Download and Install IBM Bob](#step-13)
-14. [Set Up MCP Server in IBM Bob](#step-14)
-15. [Query Data from Topic and Explore Schemas](#step-15)
+10. [Enable RTCE and Add API Keys](#step-12)
+11. [Download and Install IBM Bob](#step-13)
+12. [Set Up MCP Server in IBM Bob](#step-14)
+13. [Query Data from Topic and Explore Schemas](#step-15)
+14. [Clean Up Resources](#step-10)
+15. [Confluent Resources and Next Steps](#step-11)
 ***
 
 ## **Prerequisites**
