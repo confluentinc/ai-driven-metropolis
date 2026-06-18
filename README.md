@@ -81,6 +81,8 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 ***
 
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
+
 ## <a name="step-2"></a>Create an Environment and Cluster
 
 An environment contains clusters and its deployed components such as Apache Flink, Connectors, ksqlDB, and Schema Registry. You have the ability to create different environments based on your company's requirements. For example, you can use environments to separate Development/Testing, Pre-Production, and Production clusters. 
