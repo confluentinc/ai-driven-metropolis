@@ -37,12 +37,12 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 
 ### Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
-10. [Enable RTCE and Add API Keys](#step-12)
-11. [Download and Install IBM Bob](#step-13)
-12. [Set Up MCP Server in IBM Bob](#step-14)
-13. [Query Data from Topic and Explore Schemas](#step-15)
-14. [Clean Up Resources](#step-10)
-15. [Confluent Resources and Next Steps](#step-11)
+10. [Enable RTCE and Add API Keys](#step-10)
+11. [Download and Install IBM Bob](#step-11)
+12. [Set Up MCP Server in IBM Bob](#step-12)
+13. [Query Data from Topic and Explore Schemas](#step-13)
+14. [Clean Up Resources](#step-14)
+15. [Confluent Resources and Next Steps](#step-15)
 ***
 
 ## **Prerequisites**
@@ -780,7 +780,7 @@ In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on on
 
 ---
 
-## <a name="step-12"></a>Enable RTCE and Add API Keys
+## <a name="step-10"></a>Enable RTCE and Add API Keys
 
 1. In **Confluent Cloud**, navigate to the environment you created in Part 1.
 2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
@@ -798,7 +798,7 @@ In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on on
 
 > **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
 
-5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 14.
+5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 12.
 6. The RTCE endpoint URL follows the pattern:
    ```
    https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>
@@ -823,7 +823,7 @@ In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on on
     Save this token for later use.
 ---
 
-## <a name="step-13"></a>Download and Install IBM Bob
+## <a name="step-11"></a>Download and Install IBM Bob
 
 1. Go to [https://bob.ibm.com](https://bob.ibm.com) and sign in with your IBM ID (or create a free account with your personal email).
 2. Download the **IBM Bob** desktop application for your operating system (macOS, Windows, or Linux).
@@ -832,7 +832,7 @@ In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on on
 
 ---
 
-## <a name="step-14"></a>Set Up MCP Server in IBM Bob
+## <a name="step-12"></a>Set Up MCP Server in IBM Bob
 
 IBM Bob supports MCP servers as external data connections. You will register the RTCE endpoint as an MCP server so Bob can query your Kafka topic in real time.
 
@@ -861,7 +861,7 @@ IBM Bob supports MCP servers as external data connections. You will register the
 
 ---
 
-## <a name="step-15"></a>Query Data from Topic and Explore Schemas
+## <a name="step-13"></a>Query Data from Topic and Explore Schemas
 
 With the MCP server configured, IBM Bob can answer natural language questions against your live Kafka topic.
 
@@ -917,7 +917,7 @@ Bob will use RTCE to fetch, filter, and reason over the live streaming data and 
 ***
 
 
-## <a name="step-10"></a>Clean Up Resources
+## <a name="step-14"></a>Clean Up Resources
 
 Deleting the resources you created during this workshop will prevent you from incurring additional charges. 
 
@@ -939,7 +939,7 @@ Deleting the resources you created during this workshop will prevent you from in
 
 *** 
 
-## <a name="step-11"></a>Confluent Resources and Further Testing
+## <a name="step-15"></a>Confluent Resources and Further Testing
 
 Here are some links to check out if you are interested in further testing:
 - [Confluent Cloud Documentation](https://docs.confluent.io/cloud/current/overview.html)
