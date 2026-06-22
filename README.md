@@ -24,7 +24,7 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 ## **Agenda**
 
-### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink + Real-Time Context Engine (RTCE) with IBM Bob)
 1. [Log into Confluent Cloud](#step-1)
 2. [Create an Environment and Cluster](#step-2)
 3. [Create a Flink Compute Pool](#step-3)
@@ -37,7 +37,7 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 10. [Query Data from Topic and Explore Schemas](#step-10)
 
 
-### Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
+### Part 2 — Integrating your AI tools, LLMs, and vector databases with Confluent using Flink SQL
 11. [Connect AI Agents, LLMs, and Vector Databases to Confluent](#step-11)
 12. [Invoke AI Models on Flink for Enrichment and Vector Search](#step-12)
 13. [Execute Real-Time Decisions Using Streaming AI Agents](#step-13)
@@ -62,6 +62,24 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
    ```
 
 3. Install python based on your OS (https://www.python.org/downloads/)
+
+Here is an example for ubuntu OS:
+
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv git -y
+python3 -m venv venv
+source venv/bin/activate
+```
+
+4. Install Python Dependencies for workshop sample data
+
+```bash
+git clone https://github.com/confluentinc/ai-driven-metropolis.git
+
+pip install -r ai-driven-metropolis/common/datagen/requirements.txt
+```
+
 
 > **Note:** You will create resources during this workshop that will incur costs. When you sign up for a Confluent Cloud account, you will get free credits to use in Confluent Cloud. This will cover the cost of resources created during the workshop. More details on the specifics can be found [here](https://www.confluent.io/confluent-cloud/tryfree/).
 
@@ -160,6 +178,20 @@ An environment contains clusters and its deployed components such as Apache Flin
     <img src="./common/images/flink-workspace-3.png" width=60% height=60%>
 </div>
 
+8. Create inital source table ride_requests. (Mandatorily)
+
+```sql
+CREATE TABLE IF NOT EXISTS `ride_requests` (
+      `request_id` STRING NOT NULL,
+      `customer_email` STRING NOT NULL,
+      `pickup_zone` STRING NOT NULL,
+      `drop_off_zone` STRING NOT NULL,
+      `price` DOUBLE NOT NULL,
+      `number_of_passengers` INT NOT NULL,
+      `request_ts` TIMESTAMP(3) WITH LOCAL TIME ZONE NOT NULL,
+      WATERMARK FOR `request_ts` AS `request_ts` - INTERVAL '5' SECOND
+    );
+```
 ***
 
 ## <a name="step-4"></a>Create an API Key
@@ -353,7 +385,7 @@ The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data 
     <img src="./common/images/rtce-topic.png" width=90% height=90%>
 </div>
 
-3. Select the topic you want to expose — for this exercise use `completed_actions`.
+3. Select the topic you want to expose — for this exercise use `anomalies_per_zone`.
 4. In the topic detail view, click the **Context engine** toggle to enable RTCE. A dialog will appear confirming the enablement details (topic name, environment, cluster, cloud, and region).
 
 <div align="center" padding=25px>
@@ -439,7 +471,7 @@ Start by asking Bob what topics are available:
 
 > *"What topics are available?"*
 
-Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and return all online topics — for example `completed_actions` and other topics you have rtce enabled on.
+Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and return all online topics — for example `anomalies_per_zone` and other topics you have rtce enabled on.
 
 <div align="center" padding=25px>
     <img src="./common/images/bob-mcp-answer.png" width=75% height=75%>
@@ -449,7 +481,7 @@ Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and retur
 
 Ask Bob to describe the structure of a topic:
 
-> *"What is the schema of the `completed_actions` topic?"*
+> *"What is the schema of the `anomalies_per_zone` topic?"*
 
 Bob will return the field names, data types, and a sample record from the topic — pulled live from RTCE.
 
@@ -457,11 +489,12 @@ Bob will return the field names, data types, and a sample record from the topic 
 
 Retrieve recent events from the topic:
 
-> *"Show me the last 10 messages from `completed_actions`."*
+> *"Show me the last 10 messages from `anomalies_per_zone`."*
 
+(Optional - Part 2)
 ### Explore Anomalies
 
-If you left the anomaly detection job running from Part 1 , you can enable rtce on `anomalies_enriched` topic and query :
+If you are done with part 2 of the workshop, then you can enable rtce on `anomalies_enriched` topic and query :
 
 > *"Are there any anomalies in `anomalies_enriched` right now?"*
 
