@@ -75,8 +75,6 @@ source venv/bin/activate
 4. Install Python dependencies for workshop sample data
 
 ```bash
-git clone https://github.com/confluentinc/ai-driven-metropolis.git
-
 pip install -r ai-driven-metropolis/common/datagen/requirements.txt
 ```
 
@@ -178,7 +176,7 @@ An environment contains clusters and its deployed components such as Apache Flin
     <img src="./common/images/flink-workspace-3.png" width=60% height=60%>
 </div>
 
-8. Create inital source table ride_requests. (required)
+8. Create initial source table ride_requests. (required)
 
 ```sql
 CREATE TABLE IF NOT EXISTS `ride_requests` (
@@ -394,7 +392,7 @@ The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data 
 
 > **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
 
-5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 12.
+5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 9.
 6. The RTCE endpoint URL follows the pattern:
    ```
    https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>
@@ -502,7 +500,7 @@ If you are done with part 2 of the workshop, then you can enable RTCE on `anomal
 
 ### Cross-Topic Analysis
 
-You can enable RTCE on multiple topics and perfome complex queries:
+You can enable RTCE on multiple topics and perform complex queries:
 
 > *"Which zones had the highest request count in the last 5 minutes?"*
 
