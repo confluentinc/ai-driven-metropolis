@@ -98,7 +98,7 @@ pip install -r ai-driven-metropolis/common/datagen/requirements.txt
 
 ***
 
-### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink + Real-Time Context Engine (RTCE) with IBM Bob)
 
 ## <a name="step-2"></a>Create an Environment and Cluster
 
