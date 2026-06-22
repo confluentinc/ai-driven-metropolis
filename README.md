@@ -24,23 +24,23 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 ## **Agenda**
 
-### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink + Real-Time Context Engine (RTCE) with IBM Bob)
 1. [Log into Confluent Cloud](#step-1)
 2. [Create an Environment and Cluster](#step-2)
 3. [Create a Flink Compute Pool](#step-3)
 4. [Create an API Key Pair](#step-4)
-5. [Connect AI Agents, LLMs, and Vector Databases to Confluent](#step-5)
-6. [Generate Ride Requests for AI Processing](#step-6)
-7. [Detect Anomalies Using Built-In Flink Functions](#step-7)
-8. [Invoke AI Models on Flink for Enrichment and Vector Search](#step-8)
-9. [Execute Real-Time Decisions Using Streaming AI Agents](#step-9)
+5. [Generate Ride Requests for AI Processing](#step-5)
+6. [Detect Anomalies Using Built-In Flink Functions](#step-6)
+7. [Enable RTCE and Add API Keys](#step-7)
+8. [Download and Install IBM Bob](#step-8)
+9. [Set Up MCP Server in IBM Bob](#step-9)
+10. [Query Data from Topic and Explore Schemas](#step-10)
 
 
-### Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
-10. [Enable RTCE and Add API Keys](#step-10)
-11. [Download and Install IBM Bob](#step-11)
-12. [Set Up MCP Server in IBM Bob](#step-12)
-13. [Query Data from Topic and Explore Schemas](#step-13)
+### Part 2 — Integrating your AI tools, LLMs, and vector databases with Confluent using Flink SQL
+11. [Connect AI Agents, LLMs, and Vector Databases to Confluent](#step-11)
+12. [Invoke AI Models on Flink for Enrichment and Vector Search](#step-12)
+13. [Execute Real-Time Decisions Using Streaming AI Agents](#step-13)
 14. [Clean Up Resources](#step-14)
 15. [Confluent Resources and Next Steps](#step-15)
 ***
@@ -63,6 +63,22 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 3. Install python based on your OS (https://www.python.org/downloads/)
 
+Here is an example for Ubuntu OS:
+
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv git -y
+python3 -m venv venv
+source venv/bin/activate
+```
+
+4. Install Python dependencies for workshop sample data
+
+```bash
+pip install -r ai-driven-metropolis/common/datagen/requirements.txt
+```
+
+
 > **Note:** You will create resources during this workshop that will incur costs. When you sign up for a Confluent Cloud account, you will get free credits to use in Confluent Cloud. This will cover the cost of resources created during the workshop. More details on the specifics can be found [here](https://www.confluent.io/confluent-cloud/tryfree/).
 
 <div align="center" padding=25px>
@@ -82,7 +98,7 @@ All of this runs in real time on **Confluent Cloud for Apache Flink**, with no e
 
 ***
 
-### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink)
+### Part 1 — AI-Driven Metropolis (Confluent Cloud + Flink + Real-Time Context Engine (RTCE) with IBM Bob)
 
 ## <a name="step-2"></a>Create an Environment and Cluster
 
@@ -160,6 +176,20 @@ An environment contains clusters and its deployed components such as Apache Flin
     <img src="./common/images/flink-workspace-3.png" width=60% height=60%>
 </div>
 
+8. Create initial source table ride_requests. (required)
+
+```sql
+CREATE TABLE IF NOT EXISTS `ride_requests` (
+      `request_id` STRING NOT NULL,
+      `customer_email` STRING NOT NULL,
+      `pickup_zone` STRING NOT NULL,
+      `drop_off_zone` STRING NOT NULL,
+      `price` DOUBLE NOT NULL,
+      `number_of_passengers` INT NOT NULL,
+      `request_ts` TIMESTAMP(3) WITH LOCAL TIME ZONE NOT NULL,
+      WATERMARK FOR `request_ts` AS `request_ts` - INTERVAL '5' SECOND
+    );
+```
 ***
 
 ## <a name="step-4"></a>Create an API Key
@@ -182,14 +212,313 @@ An environment contains clusters and its deployed components such as Apache Flin
 6. After creating and saving the API key, you will see this API key in the Confluent Cloud UI in the *API Keys* table. If you don't see the API key populate right away, try refreshing your browser.
 
 
-## <a name="step-5"></a>Connect AI Agents, LLMs, and Vector Databases to Confluent
+## <a name="step-5"></a>Generate Ride Requests for AI Processing
 
-This step guides you through integrating your AI tools, LLMs, and vector databases with Confluent using Flink SQL. You will set up a connection to a MongoDB vector database, define the target table, and configure a Model Context Protocol (MCP) server connection to act as an external tool for your AI agents.
+To test the integration and stream data into your system, you need to execute the sample data generator script. This script acts as a producer that pushes ride request logs to Confluent Cloud.
+
+Update the Configuration File
+Before running the generator, you must update the local config.json file with your specific Confluent Cloud Kafka cluster endpoint, API keys, and Schema Registry details.
+
+Update (common/datagen/config.json) file matching this structure:
+
+```json
+{
+  "bootstrap_servers": "<YOUR_CONFLUENT_BOOTSTRAP_ENDPOINT_ENDING_WITH_9092>",
+  "kafka_key": "<YOUR_KAFKA_CLUSTER_API_KEY>",
+  "kafka_secret": "<YOUR_KAFKA_CLUSTER_API_SECRET>",
+  "sr_url": "<YOUR_SCHEMA_REGISTRY_ENDPOINT_URL>",
+  "sr_key": "<YOUR_SCHEMA_REGISTRY_API_KEY>",
+  "sr_secret": "<YOUR_SCHEMA_REGISTRY_API_SECRET>"
+}
+```
+
+Execute the Data Generator
+Run the following script command in your terminal to start generating and streaming the simulated ride request datasets into Confluent Cloud:
+
+```bash
+python common/datagen/datagen.py --data-file common/datagen/ride_requests.jsonl --config common/datagen/config.json
+```
+
+## <a name="step-6"></a>Detect Anomalies Using Built-In Flink Functions
+
+Visualize surge in `ride_requests` using `ML_DETECT_ANOMALIES`
+
+This step identifies unexpected surges in ride requests for each pickup zone in real time using Flink's built-in anomaly detection function. We analyze ride request counts over 5-minute windows and compare them against expected baselines derived from historical trends.
+
+Read the [documentation](https://docs.confluent.io/cloud/current/ai/builtin-functions/detect-anomalies.html) and view the [documentation](https://docs.confluent.io/cloud/current/flink/reference/functions/model-inference-functions.html#flink-sql-ml-anomaly-detect-function) on Flink anomaly detection for more details about how it works.
+
+In the [Flink UI](https://confluent.cloud/go/flink), select your new environment and open a SQL workspace. Then, visualize the anomaly detection in action by running this query:
+
+```sql
+WITH windowed_traffic AS (
+    SELECT
+        window_start,
+        window_end,
+        window_time,
+        pickup_zone,
+        COUNT(*) AS request_count,
+        SUM(number_of_passengers) AS total_passengers,
+        SUM(CAST(price AS DECIMAL(10, 2))) AS total_revenue
+    FROM TABLE(
+        TUMBLE(TABLE ride_requests, DESCRIPTOR(request_ts), INTERVAL '5' MINUTE)
+    )
+    GROUP BY window_start, window_end, window_time, pickup_zone
+)
+SELECT
+    pickup_zone,
+    window_time,
+    request_count,
+    total_passengers,
+    total_revenue,
+    ML_DETECT_ANOMALIES(
+        CAST(request_count AS DOUBLE),
+        window_time,
+        JSON_OBJECT(
+            'minTrainingSize' VALUE 286,
+            'maxTrainingSize' VALUE 7000,
+            'confidencePercentage' VALUE 99.999,
+            'enableStl' VALUE FALSE
+        )
+    ) OVER (
+        PARTITION BY pickup_zone
+        ORDER BY window_time
+        RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS anomaly_result
+FROM windowed_traffic;
+```
+
+Click on the **anomaly_result** graph.
+
+![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-graph1.png)
+
+You will notice that there was an anomaly detected in one of the zones.
+
+![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-graph2.png)
+
+Now let's turn this into a continuous Flink job that filters for only the anomalies:
+
+```sql
+CREATE TABLE anomalies_per_zone AS
+WITH windowed_traffic AS (
+    SELECT
+        window_start,
+        window_end,
+        window_time,
+        pickup_zone,
+        COUNT(*) AS request_count,
+        SUM(number_of_passengers) AS total_passengers,
+        SUM(CAST(price AS DECIMAL(10, 2))) AS total_revenue
+    FROM TABLE(
+        TUMBLE(TABLE ride_requests, DESCRIPTOR(request_ts), INTERVAL '5' MINUTE)
+    )
+    GROUP BY window_start, window_end, window_time, pickup_zone
+),
+anomaly_detection AS (
+    SELECT
+        pickup_zone,
+        window_time,
+        request_count,
+        total_passengers,
+        total_revenue,
+        ML_DETECT_ANOMALIES(
+            CAST(request_count AS DOUBLE),
+            window_time,
+            JSON_OBJECT(
+                'minTrainingSize' VALUE 286,
+                'maxTrainingSize' VALUE 7000,
+                'confidencePercentage' VALUE 99.9,
+                'enableStl' VALUE FALSE
+            )
+        ) OVER (
+            PARTITION BY pickup_zone
+            ORDER BY window_time
+            RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS anomaly_result
+    FROM windowed_traffic
+)
+SELECT
+    pickup_zone,
+    window_time,
+    request_count,
+    total_passengers,
+    total_revenue,
+    CAST(ROUND(anomaly_result.forecast_value) AS BIGINT) AS expected_requests,
+    anomaly_result.upper_bound AS upper_bound,
+    anomaly_result.lower_bound AS lower_bound,
+    anomaly_result.is_anomaly AS is_surge
+FROM anomaly_detection
+WHERE anomaly_result.is_anomaly = true
+  AND request_count > anomaly_result.upper_bound;
+```
+
+> [!NOTE]
+>
+> Leave the query above running. Flink will typically take around five minutes to detect an anomaly. The reason for this is that we're detecting anomalies in 5-minute "windows", and we need to wait for the first window to close before Flink can detect one.
+
+In a new cell, run the following to view the results.
+
+```sql
+SELECT * FROM anomalies_per_zone
+```
+
+You should see an anomaly in the `French Quarter` zone.
+
+![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-results.png)
+
+These detected surges are then used as triggers for the next steps — contextual understanding and agentic vessel movement.
+
+
+---
+
+## <a name="step-7"></a>Enable RTCE and Add API Keys
+
+
+**What is RTCE?**  
+The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data source. It automatically indexes messages, understands their schema, and provides an MCP-compatible endpoint so any MCP-aware AI tool can read, filter, and reason over your streaming data in real time.
+
+1. In **Confluent Cloud**, navigate to the environment you created in Part 1.
+2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
+
+<div align="center" padding=25px>
+    <img src="./common/images/rtce-topic-new.png" width=90% height=90%>
+</div>
+
+3. Select the topic you want to expose — for this exercise use `anomalies_per_zone`.
+4. In the topic detail view, click the **Context engine** toggle to enable RTCE. A dialog will appear confirming the enablement details (topic name, environment, cluster, cloud, and region).
+
+<div align="center" padding=25px>
+    <img src="./common/images/rtce-topic-details-new.png" width=50% height=50%>
+</div>
+
+> **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
+
+5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 9.
+6. The RTCE endpoint URL follows the pattern:
+   ```
+   https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>
+   ```
+7. Create a Global API key
+    1. Open the Administration menu in the upper-right corner and select API keys.
+    2. Click + Add API key.
+    3. For Name, enter a name for the API key.
+    4. Optionally, for Description, enter a description.
+    5. Under Select account, select My account.
+    6. Under Select key scope, select Global.
+    7. Click Create API key.
+    8. Download or copy the API key and secret. After you close this dialog, the secret is no longer available.
+   
+8. Generate the Base64 token
+    ```shell
+    export KEY=<API_KEY>
+    export SECRET=<API_SECRET>
+    export TOKEN=$(echo -n "${KEY}:${SECRET}" | base64)
+    echo $TOKEN
+    ```
+    Save this token for later use.
+---
+
+## <a name="step-8"></a>Download and Install IBM Bob
+
+**What is IBM Bob?**  
+IBM Bob is an AI-powered assistant that supports the Model Context Protocol (MCP), allowing it to connect to live data sources and answer natural language questions against them.
+
+
+1. Go to [https://bob.ibm.com](https://bob.ibm.com) and sign in with your IBM ID (or create a free account with your personal email).
+2. Download the **IBM Bob** desktop application for your operating system (macOS, Windows, or Linux).
+3. Run the installer and follow the on-screen instructions to complete the installation.
+4. Launch IBM Bob and sign in with your IBM ID.
+
+---
+
+## <a name="step-9"></a>Set Up MCP Server in IBM Bob
+
+IBM Bob supports MCP servers as external data connections. You will register the RTCE endpoint as an MCP server so Bob can query your Kafka topic in real time.
+
+1. In IBM Bob, open **Settings** on the right panel → **MCP Servers** (or **Integrations** → **MCP**).
+2. Click **Open on Global MCP tab** and paste in the following with the details for your mcp server:
+
+   ```json
+    {
+    "mcpServers": {
+        "confluent-rtce": {
+        "type": "streamable-http",
+        "url": "https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>",
+        "headers": {
+            "Authorization": "Basic <TOKEN>"
+        }
+        }
+    }
+    }
+   ```
+
+3. Click Save and verify that IBM Bob can successfully connect to the RTCE endpoint. Once the connection is established, a new MCP server will appear with a green status indicator, as shown below.
+<div align="center" padding=25px>
+    <img src="./common/images/mcp-server-verification.png" width=50% height=50%>
+</div>
+4. Once the connection shows **Connected**, you are ready to query.
+
+---
+
+## <a name="step-10"></a>Query Data from Topic and Explore Schemas
+
+With the MCP server configured, IBM Bob can answer natural language questions against your live Kafka topic.
+
+### Discover Available Topics
+
+Start by asking Bob what topics are available:
+
+> *"What topics are available?"*
+
+Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and return all online topics — for example `anomalies_per_zone` and other topics you have rtce enabled on.
+
+<div align="center" padding=25px>
+    <img src="./common/images/bob-mcp-answer.png" width=75% height=75%>
+</div>
+
+### View Topic Schema
+
+Ask Bob to describe the structure of a topic:
+
+> *"What is the schema of the `anomalies_per_zone` topic?"*
+
+Bob will return the field names, data types, and a sample record from the topic — pulled live from RTCE.
+
+### Query Recent Records
+
+Retrieve recent events from the topic:
+
+> *"Show me the last 10 messages from `anomalies_per_zone`."*
+
+(Optional - Part 2)
+### Explore Anomalies
+
+If you are done with part 2 of the workshop, then you can enable RTCE on `anomalies_enriched` topic and query :
+
+> *"Are there any anomalies in `anomalies_enriched` right now?"*
+
+> *"What is the anomaly reason for the most recent surge?"*
+
+### Cross-Topic Analysis
+
+You can enable RTCE on multiple topics and perform complex queries:
+
+> *"Which zones had the highest request count in the last 5 minutes?"*
+
+> *"What actions were taken by the dispatch agent in `completed_actions`?"*
+
+Bob will use RTCE to fetch, filter, and reason over the live streaming data and return grounded, up-to-date answers.
+
+
+***
+
+# Part 2 — Integrating your AI tools, LLMs, and vector databases with Confluent using Flink SQL
+
+## <a name="step-11"></a>Connect AI Agents, LLMs, and Vector Databases to Confluent
+
+This step guides you to set up a connection to a MongoDB vector database, define the target table, and configure a Model Context Protocol (MCP) server connection to act as an external tool for your AI agents.
 
 ### Prerequisites
 Ensure you have the appropriate Confluent Cloud or Flink environment active before running these SQL statements.
-
----
 
 ### 1. Establish Vector Database Connection
 
@@ -336,163 +665,11 @@ WITH (
 );
 ```
 
-## <a name="step-6"></a>Generate Ride Requests for AI Processing
-
-To test the integration and stream data into your system, you need to execute the sample data generator script. This script acts as a producer that pushes ride request logs to Confluent Cloud.
-
-Update the Configuration File
-Before running the generator, you must update the local config.json file with your specific Confluent Cloud Kafka cluster endpoint, API keys, and Schema Registry details.
-
-Update (common/datagen/config.json) file matching this structure:
-
-```json
-{
-  "bootstrap_servers": "<YOUR_CONFLUENT_BOOTSTRAP_ENDPOINT_ENDING_WITH_9092>",
-  "kafka_key": "<YOUR_KAFKA_CLUSTER_API_KEY>",
-  "kafka_secret": "<YOUR_KAFKA_CLUSTER_API_SECRET>",
-  "sr_url": "<YOUR_SCHEMA_REGISTRY_ENDPOINT_URL>",
-  "sr_key": "<YOUR_SCHEMA_REGISTRY_API_KEY>",
-  "sr_secret": "<YOUR_SCHEMA_REGISTRY_API_SECRET>"
-}
-```
-
-Execute the Data Generator
-Run the following script command in your terminal to start generating and streaming the simulated ride request datasets into Confluent Cloud:
-
-```bash
-python common/datagen/datagen.py --data-file common/datagen/ride_requests.jsonl --config common/datagen/config.json
-```
-
-## <a name="step-7"></a>Detect Anomalies Using Built-In Flink Functions
-
-Visualize surge in `ride_requests` using `ML_DETECT_ANOMALIES`
-
-This step identifies unexpected surges in ride requests for each pickup zone in real time using Flink's built-in anomaly detection function. We analyze ride request counts over 5-minute windows and compare them against expected baselines derived from historical trends.
-
-Read the [documentation](https://docs.confluent.io/cloud/current/ai/builtin-functions/detect-anomalies.html) and view the [documentation](https://docs.confluent.io/cloud/current/flink/reference/functions/model-inference-functions.html#flink-sql-ml-anomaly-detect-function) on Flink anomaly detection for more details about how it works.
-
-In the [Flink UI](https://confluent.cloud/go/flink), select your new environment and open a SQL workspace. Then, visualize the anomaly detection in action by running this query:
-
-```sql
-WITH windowed_traffic AS (
-    SELECT
-        window_start,
-        window_end,
-        window_time,
-        pickup_zone,
-        COUNT(*) AS request_count,
-        SUM(number_of_passengers) AS total_passengers,
-        SUM(CAST(price AS DECIMAL(10, 2))) AS total_revenue
-    FROM TABLE(
-        TUMBLE(TABLE ride_requests, DESCRIPTOR(request_ts), INTERVAL '5' MINUTE)
-    )
-    GROUP BY window_start, window_end, window_time, pickup_zone
-)
-SELECT
-    pickup_zone,
-    window_time,
-    request_count,
-    total_passengers,
-    total_revenue,
-    ML_DETECT_ANOMALIES(
-        CAST(request_count AS DOUBLE),
-        window_time,
-        JSON_OBJECT(
-            'minTrainingSize' VALUE 286,
-            'maxTrainingSize' VALUE 7000,
-            'confidencePercentage' VALUE 99.999,
-            'enableStl' VALUE FALSE
-        )
-    ) OVER (
-        PARTITION BY pickup_zone
-        ORDER BY window_time
-        RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) AS anomaly_result
-FROM windowed_traffic;
-```
-
-Click on the **anomaly_result** graph.
-
-![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-graph1.png)
-
-You will notice that there was an anomaly detected in one of the zones.
-
-![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-graph2.png)
-
-Now let's turn this into a continuous Flink job that filters for only the anomalies:
-
-```sql
-CREATE TABLE anomalies_per_zone AS
-WITH windowed_traffic AS (
-    SELECT
-        window_start,
-        window_end,
-        window_time,
-        pickup_zone,
-        COUNT(*) AS request_count,
-        SUM(number_of_passengers) AS total_passengers,
-        SUM(CAST(price AS DECIMAL(10, 2))) AS total_revenue
-    FROM TABLE(
-        TUMBLE(TABLE ride_requests, DESCRIPTOR(request_ts), INTERVAL '5' MINUTE)
-    )
-    GROUP BY window_start, window_end, window_time, pickup_zone
-),
-anomaly_detection AS (
-    SELECT
-        pickup_zone,
-        window_time,
-        request_count,
-        total_passengers,
-        total_revenue,
-        ML_DETECT_ANOMALIES(
-            CAST(request_count AS DOUBLE),
-            window_time,
-            JSON_OBJECT(
-                'minTrainingSize' VALUE 286,
-                'maxTrainingSize' VALUE 7000,
-                'confidencePercentage' VALUE 99.9,
-                'enableStl' VALUE FALSE
-            )
-        ) OVER (
-            PARTITION BY pickup_zone
-            ORDER BY window_time
-            RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS anomaly_result
-    FROM windowed_traffic
-)
-SELECT
-    pickup_zone,
-    window_time,
-    request_count,
-    total_passengers,
-    total_revenue,
-    CAST(ROUND(anomaly_result.forecast_value) AS BIGINT) AS expected_requests,
-    anomaly_result.upper_bound AS upper_bound,
-    anomaly_result.lower_bound AS lower_bound,
-    anomaly_result.is_anomaly AS is_surge
-FROM anomaly_detection
-WHERE anomaly_result.is_anomaly = true
-  AND request_count > anomaly_result.upper_bound;
-```
-
-> [!NOTE]
->
-> Leave the query above running. Flink will typically take around five minutes to detect an anomaly. The reason for this is that we're detecting anomalies in 5-minute "windows", and we need to wait for the first window to close before Flink can detect one.
-
-In a new cell, run the following to view the results.
-
-```sql
-SELECT * FROM anomalies_per_zone
-```
-
-You should see an anomaly in the `French Quarter` zone.
-
-![Anomaly Screenshot](./common/images/lab3/lab3-anomaly-results.png)
-
-These detected surges are then used as triggers for the next steps — contextual understanding and agentic vessel movement.
 
 
-## <a name="step-8"></a>Invoke AI Models on Flink for Enrichment and Vector Search
+
+
+## <a name="step-12"></a>Invoke AI Models on Flink for Enrichment and Vector Search
 Anomaly detection: Enrich `anomalies_per_zone` with possible causes of the anomaly using vector search
 
 Once a surge is detected, we want to **understand why** it happened. This step enriches detected anomalies with real-world context using **Vector Search** and **LLM-based reasoning**. These detected surges are then used as triggers for the next steps — contextual understanding and agentic vessel movement.
@@ -654,7 +831,7 @@ FROM (
 
 > NOTE: Leave the query running so that it runs continuously.
 
-## <a name="step-9"></a>Execute Real-Time Decisions Using Streaming AI Agents
+## <a name="step-13"></a>Execute Real-Time Decisions Using Streaming AI Agents
 
 Agent Definition: Run `CREATE TOOL` and `CREATE AGENT` to define agent tools, prompt, and capabilities
 
@@ -766,155 +943,6 @@ SELECT * FROM `completed_actions`;
 
 By chaining these intelligent streaming components together, we’ve built an always-on, real-time, context-aware agentic pipeline that detects ride request demand surges, explains their causes, and takes autonomous action — all within seconds.
 
----
-
-# Part 2 — Real-Time Context Engine (RTCE) with IBM Bob
-
-In Part 2, you will enable Confluent's **Real-Time Context Engine (RTCE)** on one of the topics created in Part 1, then use **IBM Bob** as an AI assistant to query that live data through an MCP server — without writing any code.
-
-> **What is RTCE?**  
-> The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data source. It automatically indexes messages, understands their schema, and provides an MCP-compatible endpoint so any MCP-aware AI tool can read, filter, and reason over your streaming data in real time.
-
-> **What is IBM Bob?**  
-> IBM Bob is an AI-powered assistant that supports the Model Context Protocol (MCP), allowing it to connect to live data sources and answer natural language questions against them.
-
----
-
-## <a name="step-10"></a>Enable RTCE and Add API Keys
-
-1. In **Confluent Cloud**, navigate to the environment you created in Part 1.
-2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
-
-<div align="center" padding=25px>
-    <img src="./common/images/rtce-topic.png" width=90% height=90%>
-</div>
-
-3. Select the topic you want to expose — for this exercise use `completed_actions`.
-4. In the topic detail view, click the **Context engine** toggle to enable RTCE. A dialog will appear confirming the enablement details (topic name, environment, cluster, cloud, and region).
-
-<div align="center" padding=25px>
-    <img src="./common/images/rtce-topic-details.png" width=50% height=50%>
-</div>
-
-> **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
-
-5. Click **Download topic details** or **Copy topic details to clipboard** to save the connection credentials — you will need them in Step 12.
-6. The RTCE endpoint URL follows the pattern:
-   ```
-   https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>
-   ```
-7. Create a Global API key
-    1. Open the Administration menu in the upper-right corner and select API keys.
-    2. Click + Add API key.
-    3. For Name, enter a name for the API key.
-    4. Optionally, for Description, enter a description.
-    5. Under Select account, select My account.
-    6. Under Select key scope, select Global.
-    7. Click Create API key.
-    8. Download or copy the API key and secret. After you close this dialog, the secret is no longer available.
-   
-8. Generate the Base64 token
-    ```shell
-    export KEY=<API_KEY>
-    export SECRET=<API_SECRET>
-    export TOKEN=$(echo -n "${KEY}:${SECRET}" | base64)
-    echo $TOKEN
-    ```
-    Save this token for later use.
----
-
-## <a name="step-11"></a>Download and Install IBM Bob
-
-1. Go to [https://bob.ibm.com](https://bob.ibm.com) and sign in with your IBM ID (or create a free account with your personal email).
-2. Download the **IBM Bob** desktop application for your operating system (macOS, Windows, or Linux).
-3. Run the installer and follow the on-screen instructions to complete the installation.
-4. Launch IBM Bob and sign in with your IBM ID.
-
----
-
-## <a name="step-12"></a>Set Up MCP Server in IBM Bob
-
-IBM Bob supports MCP servers as external data connections. You will register the RTCE endpoint as an MCP server so Bob can query your Kafka topic in real time.
-
-1. In IBM Bob, open **Settings** on the right panel → **MCP Servers** (or **Integrations** → **MCP**).
-2. Click **Open on Global MCP tab** and paste in the following with the details for your mcp server:
-
-   ```json
-    {
-    "mcpServers": {
-        "confluent-rtce": {
-        "type": "streamable-http",
-        "url": "https://mcp.<REGION>.aws.confluent.cloud/mcp/v1/context-engine/organizations/<ORG_ID>/environments/<ENV_ID>/kafka-clusters/<LKC_ID>",
-        "headers": {
-            "Authorization": "Basic <TOKEN>"
-        }
-        }
-    }
-    }
-   ```
-
-3. Click Save and verify that IBM Bob can successfully connect to the RTCE endpoint. Once the connection is established, a new MCP server will appear with a green status indicator, as shown below.
-<div align="center" padding=25px>
-    <img src="./common/images/mcp-server-verification.png" width=50% height=50%>
-</div>
-4. Once the connection shows **Connected**, you are ready to query.
-
----
-
-## <a name="step-13"></a>Query Data from Topic and Explore Schemas
-
-With the MCP server configured, IBM Bob can answer natural language questions against your live Kafka topic.
-
-### Discover Available Topics
-
-Start by asking Bob what topics are available:
-
-> *"What topics are available?"*
-
-Bob will call the `listTopics` tool on the `confluent-rtce` MCP server and return all online topics — for example `completed_actions` and other topics you have rtce enabled on.
-
-<div align="center" padding=25px>
-    <img src="./common/images/bob-mcp-answer.png" width=75% height=75%>
-</div>
-
-### View Topic Schema
-
-Ask Bob to describe the structure of a topic:
-
-> *"What is the schema of the `completed_actions` topic?"*
-
-Bob will return the field names, data types, and a sample record from the topic — pulled live from RTCE.
-
-### Query Recent Records
-
-Retrieve recent events from the topic:
-
-> *"Show me the last 10 messages from `completed_actions`."*
-
-### Explore Anomalies
-
-If you left the anomaly detection job running from Part 1 , you can enable rtce on `anomalies_enriched` topic and query :
-
-> *"Are there any anomalies in `anomalies_enriched` right now?"*
-
-> *"What is the anomaly reason for the most recent surge?"*
-
-### Cross-Topic Analysis
-
-You can enable rtce on multiple topics and perfome complex queries:
-
-> *"Which zones had the highest request count in the last 5 minutes?"*
-
-> *"What actions were taken by the dispatch agent in `completed_actions`?"*
-
-Bob will use RTCE to fetch, filter, and reason over the live streaming data and return grounded, up-to-date answers.
-
-## Confluent RTCE + IBM Bob — Resources
-
-- [Real-Time Context Engine Overview](https://docs.confluent.io/cloud/current/ai/real-time-context-engine/overview.html#real-time-context-engine) — Official Confluent documentation for RTCE, including setup, API reference, and MCP integration details.
-- [IBM Bob](https://bob.ibm.com/) — IBM's AI assistant with MCP support for querying live data sources.
-
-***
 
 
 ## <a name="step-14"></a>Clean Up Resources
@@ -948,6 +976,7 @@ Here are some links to check out if you are interested in further testing:
 - [Flink SQL Reference](https://docs.confluent.io/cloud/current/flink/reference/overview.html)
 - [Flink SQL Functions](https://docs.confluent.io/cloud/current/flink/reference/functions/overview.html)
 - [Flink GenAI](https://www.confluent.io/blog/flinkai-realtime-ml-and-genai-confluent-cloud/)
+- [Real-Time Context Engine Overview](https://docs.confluent.io/cloud/current/ai/real-time-context-engine/overview.html#real-time-context-engine) 
+- [IBM Bob](https://bob.ibm.com/) 
 
-***
 ---
