@@ -382,14 +382,14 @@ The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data 
 2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
 
 <div align="center" padding=25px>
-    <img src="./common/images/rtce-topic.png" width=90% height=90%>
+    <img src="./common/images/rtce-topic-new.png" width=90% height=90%>
 </div>
 
 3. Select the topic you want to expose — for this exercise use `anomalies_per_zone`.
 4. In the topic detail view, click the **Context engine** toggle to enable RTCE. A dialog will appear confirming the enablement details (topic name, environment, cluster, cloud, and region).
 
 <div align="center" padding=25px>
-    <img src="./common/images/rtce-topic-details.png" width=50% height=50%>
+    <img src="./common/images/rtce-topic-details-new.png" width=50% height=50%>
 </div>
 
 > **Note:** Before enabling RTCE, ensure the topic has an assigned schema and does not frequently exceed 250 GB in retained storage.
