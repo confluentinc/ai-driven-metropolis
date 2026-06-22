@@ -338,15 +338,13 @@ You should see an anomaly in the `French Quarter` zone.
 These detected surges are then used as triggers for the next steps — contextual understanding and agentic vessel movement.
 
 
-> **What is RTCE?**  
-> The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data source. It automatically indexes messages, understands their schema, and provides an MCP-compatible endpoint so any MCP-aware AI tool can read, filter, and reason over your streaming data in real time.
-
-> **What is IBM Bob?**  
-> IBM Bob is an AI-powered assistant that supports the Model Context Protocol (MCP), allowing it to connect to live data sources and answer natural language questions against them.
-
 ---
 
 ## <a name="step-7"></a>Enable RTCE and Add API Keys
+
+
+**What is RTCE?**  
+The Real-Time Context Engine exposes Kafka topics as a semantic, queryable data source. It automatically indexes messages, understands their schema, and provides an MCP-compatible endpoint so any MCP-aware AI tool can read, filter, and reason over your streaming data in real time.
 
 1. In **Confluent Cloud**, navigate to the environment you created in Part 1.
 2. Open the **Topics** list. You will see a **Context engine** column showing whether RTCE is enabled for each topic.
@@ -390,6 +388,10 @@ These detected surges are then used as triggers for the next steps — contextua
 ---
 
 ## <a name="step-8"></a>Download and Install IBM Bob
+
+**What is IBM Bob?**  
+IBM Bob is an AI-powered assistant that supports the Model Context Protocol (MCP), allowing it to connect to live data sources and answer natural language questions against them.
+
 
 1. Go to [https://bob.ibm.com](https://bob.ibm.com) and sign in with your IBM ID (or create a free account with your personal email).
 2. Download the **IBM Bob** desktop application for your operating system (macOS, Windows, or Linux).
@@ -478,9 +480,6 @@ Bob will use RTCE to fetch, filter, and reason over the live streaming data and 
 
 ***
 
-
----
-
 # Part 2 — Integrating your AI tools, LLMs, and vector databases with Confluent using Flink SQL
 
 ## <a name="step-11"></a>Connect AI Agents, LLMs, and Vector Databases to Confluent
@@ -489,8 +488,6 @@ This step guides you to set up a connection to a MongoDB vector database, define
 
 ### Prerequisites
 Ensure you have the appropriate Confluent Cloud or Flink environment active before running these SQL statements.
-
----
 
 ### 1. Establish Vector Database Connection
 
@@ -948,8 +945,7 @@ Here are some links to check out if you are interested in further testing:
 - [Flink SQL Reference](https://docs.confluent.io/cloud/current/flink/reference/overview.html)
 - [Flink SQL Functions](https://docs.confluent.io/cloud/current/flink/reference/functions/overview.html)
 - [Flink GenAI](https://www.confluent.io/blog/flinkai-realtime-ml-and-genai-confluent-cloud/)
-- [Real-Time Context Engine Overview](https://docs.confluent.io/cloud/current/ai/real-time-context-engine/overview.html#real-time-context-engine) — Official Confluent documentation for RTCE, including setup, API reference, and MCP integration details.
-- [IBM Bob](https://bob.ibm.com/) — IBM's AI assistant with MCP support for querying live data sources.
+- [Real-Time Context Engine Overview](https://docs.confluent.io/cloud/current/ai/real-time-context-engine/overview.html#real-time-context-engine) 
+- [IBM Bob](https://bob.ibm.com/) 
 
-***
 ---
