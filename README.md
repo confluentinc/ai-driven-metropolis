@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `ride_requests` (
 ***
 
 ## <a name="step-4"></a>Create an API Key
-
+Kafka cluster api key:
 1. Open the cluster page.
 2. Click **API Keys** in the menu under *Cluster Overview*.
 3. Click **Create Key** in order to create your first API Key. If you have an existing API Key, click **+ Add Key** to create another API Key.
@@ -211,6 +211,33 @@ CREATE TABLE IF NOT EXISTS `ride_requests` (
 
 6. After creating and saving the API key, you will see this API key in the Confluent Cloud UI in the *API Keys* table. If you don't see the API key populate right away, try refreshing your browser.
 
+
+Schema Registry api key:
+
+1. Open the hamburger menu (top right corner).
+2. Click **API Keys** in the menu.
+<div align="center" padding=25px>
+    <img src="./common/images/create-sr-apikey.png" width=75% height=75%>
+</div>
+
+3. Click **Add API Key** in order to create Schema Registry API Key.
+
+<div align="center" padding=25px>
+    <img src="./common/images/create-new-key.png" width=75% height=75%>
+</div>
+
+4. Select **Schema Registry** for Key Scope and **My account** , **Environment Name**.
+<div align="center" padding=25px>
+    <img src="./common/images/sr-key-fields.png" width=75% height=75%>
+</div>
+
+5. Enter a description for your API Key (e.g. `API Key for Schema`).
+
+<div align="center" padding=25px>
+    <img src="./common/images/sr-key-download.png" width=75% height=75%>
+</div>
+
+6. After creating and saving the API key, you will see this API key in the Confluent Cloud UI in the *API Keys* table. If you don't see the API key populate right away, try refreshing your browser.
 
 ## <a name="step-5"></a>Generate Ride Requests for AI Processing
 
